@@ -27,12 +27,16 @@ repositories {
     maven {
         url = 'https://maven.brott.dev/'
     }
+    flatDir {
+        dirs 'libs', 'C:\\navx-micro\\android\\libs'
+    }
 }
 
 dependencies {
     implementation project(':FtcRobotController')
     annotationProcessor files('lib/OpModeAnnotationProcessor.jar')
-
+    implementation (name:'navx_ftc-release', ext:'aar')
     implementation "com.acmerobotics.roadrunner:ftc:0.1.13"
     implementation "com.acmerobotics.dashboard:dashboard:0.4.14"
+    implementation 'org.ftclib.ftclib:core:2.0.1' // core
 }
