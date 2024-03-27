@@ -72,6 +72,9 @@ public class Telescope {
             if (TelemetryData.telescope_position > RC_Telescope.maxOut) {
                 input = 0;
             }
+            if (TelemetryData.shoulder_target > 1500 && TelemetryData.shoulder_position < 1500){
+                input = 0;
+            }
         } else if (input < 0) {
             if (this.touch.isPressed()) {
                 input = 0;
@@ -84,7 +87,8 @@ public class Telescope {
                 input = .1 + calcFeedForward();
             } else if (TelemetryData.telescope_position > telescopeMin + 10 &&
                     TelemetryData.telescope_position > TelemetryData.telescope_target) {
-                input = -.1 + calcFeedForward();
+                //we need to move the telescope int
+                input = -.3 + calcFeedForward();
             } else {
                 input = calcFeedForward();
             }
@@ -99,8 +103,34 @@ public class Telescope {
     /**
      * standard update function that will move the shoulder if not at the desired location
      */
-    public void update(){
+    public void update(double lim){
+        move(calcPower(lim),false);
+    }
 
+    private double calcPower(double lim) {
+        double power = 0;
+        this.controller.setPID(RC_Telescope.kP, RC_Telescope.kI, RC_Telescope.kD);
+        double pid = this.controller.calculate(TelemetryData.telescope_position, TelemetryData.telescope_target);
+        pid = pid/10;
+        TelemetryData.telescope_pid = limiter(pid, lim);
+        double ff = calcFeedForward();
+        power = limiter(pid + ff,lim);
+        return power;
+    }
+
+    /**
+     * this will limit the input to a range of -limiter to limiter
+     * @param input the value to be limited
+     * @param limiter the max value the input can be
+     * @return the limited input
+     */
+    private double limiter(double input, double limiter){
+        if (input > limiter) {
+            input = limiter;
+        } else if (input < -limiter) {
+            input = -limiter;
+        }
+        return input;
     }
 
     /**

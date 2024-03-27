@@ -46,6 +46,9 @@ public class Shoulder {
     public void move(double input, boolean fromJoystick) {
         TelemetryData.shoulder_position = this.motor.getCurrentPosition();
         TelemetryData.shoulder_current = this.motor.getCurrent(CurrentUnit.MILLIAMPS);
+        if (fromJoystick  && input != 0){
+            TelemetryData.shoulder_target = TelemetryData.shoulder_position;
+        }
 
         if (input > 0) {
             if (TelemetryData.shoulder_position > RC_Shoulder.maxOut) {
@@ -72,6 +75,41 @@ public class Shoulder {
         }
         TelemetryData.shoulder_power = input;
         this.motor.setPower(input);
+    }
+
+    public void update(double lim){
+        move(calcPower(lim),false);
+    }
+
+    public void setPosition(int t){
+        TelemetryData.shoulder_target = t;
+    }
+
+    private double calcPower(double lim) {
+        double power = 0;
+        this.controller.setPID(RC_Shoulder.kP, RC_Shoulder.kI, RC_Shoulder.kD);
+        TelemetryData.shoulder_position = this.motor.getCurrentPosition();
+        double pid = this.controller.calculate(TelemetryData.shoulder_position, TelemetryData.shoulder_target);
+        pid = pid/10;
+        TelemetryData.shoulder_pid = limiter(pid,lim);
+        double ff = calcFeedForward();
+        power = limiter(pid + ff,lim);
+        return power;
+    }
+
+    /**
+     * this will limit the input to a range of -limiter to limiter
+     * @param input the value to be limited
+     * @param limiter the max value the input can be
+     * @return the limited input
+     */
+    private double limiter(double input, double limiter){
+        if (input > limiter) {
+            input = limiter;
+        } else if (input < -limiter) {
+            input = -limiter;
+        }
+        return input;
     }
 
     /**
