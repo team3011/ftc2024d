@@ -5,9 +5,9 @@ import com.acmerobotics.dashboard.config.Config;
 @Config
 public class RC_Telescope {
     public static final int maxOut = 3000;
-    public static double kP = 0.1;
+    public static double kP = 0.04;
     public static double kI = 0;
-    public static double kD = 0.001;
+    public static double kD = 0.002;
     public static double kF = 0.05;
     public static double velMultiplier = 1.6;
     public static int stowPos = 700;

@@ -6,29 +6,25 @@ import com.arcrobotics.ftclib.gamepad.GamepadKeys;
 import com.kauailabs.navx.ftc.AHRS;
 import com.qualcomm.hardware.kauailabs.NavxMicroNavigationSensor;
 import com.qualcomm.hardware.rev.RevBlinkinLedDriver;
-import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.TouchSensor;
 
-import org.firstinspires.ftc.teamcode.RobotConstants.RC_Wrist;
+import org.firstinspires.ftc.teamcode.RobotConstants.RobotConstants;
 import org.firstinspires.ftc.teamcode.RobotConstants.TelemetryData;
 import org.firstinspires.ftc.teamcode.Subsystems.Arm;
 import org.firstinspires.ftc.teamcode.Subsystems.Claw;
 import org.firstinspires.ftc.teamcode.Subsystems.Lift;
 import org.firstinspires.ftc.teamcode.Subsystems.Shoulder;
 import org.firstinspires.ftc.teamcode.Subsystems.Telescope;
-
-import org.firstinspires.ftc.teamcode.RobotConstants.RobotConstants;
 import org.firstinspires.ftc.teamcode.Subsystems.Wrist;
 
 import java.text.DecimalFormat;
 
-
-@Autonomous(name = "SubSystem_Test")
-public class SubSystem_Test extends LinearOpMode {
+@TeleOp(name = "TELE_RED")
+public class Tele_Red extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
         boolean fromAuto = true;
@@ -72,18 +68,22 @@ public class SubSystem_Test extends LinearOpMode {
         double right_y = gamepad1.right_stick_y;
         double left_x = gamepad1.left_stick_x;
         double right_x = gamepad1.right_stick_x;
+        double left_t = gamepad1.left_trigger;
+        double right_t = gamepad1.right_trigger;
+        boolean endGameStarted = false;
         waitForStart();
-        //arm.goTo_Initialization();
-        wrist.setTarget(RC_Wrist.stowPos,RC_Wrist.stowTime);
+        arm.goTo_Initialization();
         while(opModeIsActive()) {
             myGamePad.readButtons();
             left_y = zeroAnalogInput(gamepad1.left_stick_y);
             right_y = zeroAnalogInput(gamepad1.right_stick_y);
             left_x = zeroAnalogInput(gamepad1.left_stick_x);
             right_x = zeroAnalogInput(gamepad1.right_stick_x);
+            left_t = -zeroAnalogInput(gamepad1.left_trigger);
+            right_t = zeroAnalogInput(gamepad1.right_trigger);
 
 
-            /*
+
             if (!myGamePad.isDown(GamepadKeys.Button.LEFT_BUMPER) && myGamePad.wasJustReleased(GamepadKeys.Button.A)) {
                 arm.goTo_Pickup(false);
             }
@@ -92,41 +92,60 @@ public class SubSystem_Test extends LinearOpMode {
             }
             if (!myGamePad.isDown(GamepadKeys.Button.LEFT_BUMPER) && myGamePad.wasJustReleased(GamepadKeys.Button.Y)) {
                 arm.goTo_dropOff(false);
+                TelemetryData.liftStage = -3;
             }
-
-             */
 
             wrist.update();
 
-/*
-            if (right_y != 0) {
-                shoulder.move(right_y, true);
+            if (left_t != 0) {
+                arm.prepForLift(left_t);
+                endGameStarted = true;
+                //shoulder.update(0.3);
+                //telescope.update(0.3);
             } else {
-                shoulder.update(1);
+                if (right_y != 0) {
+                    shoulder.move(right_y, true);
+                } else {
+                    shoulder.update(1);
+                }
+
+                if (left_y != 0) {
+                    telescope.move(left_y, true);
+                } else {
+                    telescope.update(1);
+                }
             }
 
-            if (left_y != 0) {
-                telescope.move(left_y, true);
-            } else {
-                telescope.update(1);
+
+            double modifier = 0;
+            if (endGameStarted) {
+                if (TelemetryData.shoulder_current > 4000) {
+                    if (TelemetryData.shoulder_current > 5000) {
+                        modifier = 1;
+                    } else {
+                        modifier = 1 - (5000 - TelemetryData.shoulder_current) / 1000. + .1;
+                    }
+                } else if (TelemetryData.telescope_current > 1000) {
+                    if (TelemetryData.telescope_current > 1500) {
+                        modifier = 1;
+                    } else {
+                        modifier = 1 - (1500 - TelemetryData.telescope_current) / 500. + .1;
+                    }
+                }
+                lift.move(modifier);
             }
 
-*/
-            if (true) {
-                lift.move(right_x);
-            }
-
-
-            telemetry.addData("robot pitch", arm.getPitch());
-            //telemetry.addData("lift power",modifier);
-            //telemetry.addData("lift current", TelemetryData.lift_current);
-            //telemetry.addData("shoulder current", TelemetryData.shoulder_current);
-            //telemetry.addData("telescope current", TelemetryData.telescope_current);
-            //telemetry.addData("shoulder position", TelemetryData.shoulder_position);
-            //telemetry.addData("shoulder power", TelemetryData.shoulder_power);
-            //telemetry.addData("telescope position", TelemetryData.telescope_position);
-            //telemetry.addData("telescope target", TelemetryData.telescope_target);
-            //telemetry.addData("lift position", lift.getEncoderValue());
+            telemetry.addData("lift stage", TelemetryData.liftStage);
+            telemetry.addData("lift power",modifier);
+            telemetry.addData("lift current", TelemetryData.lift_current);
+            telemetry.addData("shoulder current", TelemetryData.shoulder_current);
+            telemetry.addData("shoulder power", TelemetryData.shoulder_power);
+            telemetry.addData("shoulder target", TelemetryData.shoulder_target);
+            telemetry.addData("telescope current", TelemetryData.telescope_current);
+            telemetry.addData("shoulder position", TelemetryData.shoulder_position);
+            telemetry.addData("telescope position", TelemetryData.telescope_position);
+            telemetry.addData("telescope target", TelemetryData.telescope_target);
+            telemetry.addData("lift position", lift.getEncoderValue());
             telemetry.update();
         }
 

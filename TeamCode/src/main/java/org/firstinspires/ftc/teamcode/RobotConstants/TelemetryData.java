@@ -24,4 +24,5 @@ public class TelemetryData {
     public static double xPower;
     public static double yPower;
     public static boolean collisionDetected;
+    public static double lift_current;
 }

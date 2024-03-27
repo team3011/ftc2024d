@@ -8,8 +8,8 @@ public class RC_Wrist {
     public static double pickupPos = 0.06;
     public static double dropOffPos = 0.65;
     public static double dropOffPosRev = 0.20;
-    public static int stowTime = 1000;
-    public static int pickupTime = 1000;
+    public static int stowTime = 500;
+    public static int pickupTime = 500;
     public static int dropOffTime = 1000;
     public static double prepToLift = 0.5;
 }

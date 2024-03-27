@@ -36,6 +36,11 @@ public class Shoulder {
         this.motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         this.motor.setDirection(DcMotorEx.Direction.REVERSE);
         this.controller = new PIDController(RC_Shoulder.kP, RC_Shoulder.kI, RC_Shoulder.kD);
+
+        if (fromAuto) {
+            this.motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            this.motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        }
     }
 
     /**

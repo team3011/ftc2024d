@@ -15,6 +15,7 @@ import org.firstinspires.ftc.teamcode.RobotConstants.RC_Shoulder;
 import org.firstinspires.ftc.teamcode.RobotConstants.RC_Telescope;
 import org.firstinspires.ftc.teamcode.RobotConstants.RC_Wrist;
 import org.firstinspires.ftc.teamcode.RobotConstants.TelemetryData;
+import org.firstinspires.ftc.teamcode.Tele_Red;
 
 public class Arm {
     private Shoulder shoulder;
@@ -52,7 +53,7 @@ public class Arm {
         this.wrist.setTarget(RC_Wrist.stowPos, RC_Wrist.stowTime);
         this.claw.closeBottom();
         this.claw.closeTop();
-        this.shoulder.setPosition(100);
+        this.shoulder.setPosition(200);
     }
 
     public void goTo_Pickup(boolean holding){
@@ -104,5 +105,214 @@ public class Arm {
             }
             this.state = 1;
         }
+    }
+
+    public void prepForLift(double input) {
+        //input = input*.9;
+        if (TelemetryData.liftStage == -3) {
+            //move shoulder up to clear the cord
+            this.shoulder.move(-input,true);
+            this.telescope.move(0,true);
+            if (TelemetryData.shoulder_position > 200) {
+                TelemetryData.liftStage = -2;
+            }
+        } else if (TelemetryData.liftStage == -2) {
+            //move telescope in to clear the cord
+            this.shoulder.move(0,true);
+            this.telescope.move(input, true);
+            if (TelemetryData.telescope_position < 5) {
+                TelemetryData.liftStage = -1;
+            }
+        } else if (TelemetryData.liftStage == -1) {
+            //move shoulder down
+            this.shoulder.move(input, true);
+            this.telescope.move(input*.3, true);
+            if (TelemetryData.shoulder_position < 5) {
+                TelemetryData.liftStage = 0;
+            }
+        } else if (TelemetryData.liftStage == 0) {
+            //move telescope out
+            this.shoulder.move(input*.3, true);
+            this.telescope.move(-input, true);
+            if (TelemetryData.telescope_position > 300) {
+                TelemetryData.liftStage = 1;
+            }
+        } else if (TelemetryData.liftStage == 1) {
+            //move shoulder up
+            this.telescope.move(0,true);
+            this.shoulder.move(-input*.7, true);
+            if (TelemetryData.shoulder_position > 1200) {
+                TelemetryData.liftStage = 2;
+                TelemetryData.shoulder_target = 1400;
+            }
+        } else if (TelemetryData.liftStage == 2) {
+            //move telescope out
+            this.shoulder.update(1);
+            this.telescope.move(-input*.7, true);
+            if (TelemetryData.telescope_position > 1800) {
+                TelemetryData.liftStage = 3;
+                TelemetryData.telescope_target = 2000;
+                TelemetryData.shoulder_target = 1400;
+                this.telescope.move(0,true);
+                this.shoulder.move(0,true);
+            }
+        } else {
+            this.shoulder.update(1);
+            this.telescope.update(1);
+        }
+
+
+
+
+
+
+            /*
+            //move down to engage the cord
+            TelemetryData.shoulder_target = 0;
+            //TelemetryData.telescope_target = 0;
+            this.telescope.move(input,true);
+            this.shoulder.move(-input,true);
+            if (Math.abs(TelemetryData.shoulder_target - TelemetryData.shoulder_position) < 15) {
+                TelemetryData.liftStage = -10;
+            }
+        } else if (TelemetryData.liftStage == -1) {
+            //push telescope out to engage cable
+            if (TelemetryData.shoulder_position > 0) {
+                this.shoulder.move(-.3,true);
+            }
+            if (TelemetryData.shoulder_position < 10) {
+                TelemetryData.telescope_target = 300;
+            }
+            if (TelemetryData.telescope_position > 250) {
+                TelemetryData.liftStage = 0;
+            }
+        }
+
+             */
+
+                /*
+                this.shoulder.update();
+                this.telescope.manualMove(-input);
+                this.telescope.getCurrent();
+                if (TelemetryData.telescope_current>600){
+                    double modifier = 1-(800-TelemetryData.telescope_current)/200.;
+                    this.lift.moveManual(-modifier);
+                } else {
+                    this.lift.moveManual(0);
+                }
+            } else {
+                TelemetryData.liftStage = 0;
+                this.telescope.manualMove(0);
+                this.shoulder.update();
+                this.lift.moveManual(0);
+            }
+        } else if (TelemetryData.liftStage == 0) {
+            //move shoulder into position to lift
+            this.telescope.manualMove(0);
+            if (TelemetryData.telescope_position < 300) {
+                this.shoulder.update();
+                this.telescope.manualMove(-input);
+            } else if (TelemetryData.telescope_position > 400) {
+                this.shoulder.update();
+                this.telescope.manualMove(input * .2);
+            }
+            if (TelemetryData.shoulder_position < 1400) {
+                double speed = this.shoulder.moveManual(-input);
+                this.shoulder.getCurrent();
+                //this.telescope.manualMove(speed / 3.33);
+                this.telescope.manualMove(0);
+                if (TelemetryData.shoulder_current > 2250) {
+                    double modifier = 1 - (2550 - TelemetryData.shoulder_current) / 300. + .1;
+                    this.lift.moveManual(-modifier);
+                } else {
+                    this.lift.moveManual(0);
+                }
+            } else {
+                TelemetryData.liftStage = 1;
+                this.telescope.manualMove(0);
+                this.shoulder.moveManual(0);
+                this.lift.moveManual(0);
+            }
+        } else if (TelemetryData.liftStage == 1) {
+            //move telescope up to above bar
+            this.shoulder.updatePosition();
+            this.telescope.updatePosition();
+            this.shoulder.moveManual(0);
+            if (TelemetryData.telescope_position < RC_Telescope.prepForLift) {
+                if (TelemetryData.shoulder_position < 1400) {
+                    this.shoulder.moveManual(-input);
+                } else if (TelemetryData.shoulder_position > 1500){
+                    this.shoulder.moveManual(input*.2);
+                } else {
+                    this.shoulder.moveManual(0);
+                }
+
+
+                this.telescope.manualMove(-input);
+                this.telescope.getCurrent();
+                if (TelemetryData.telescope_current > 600) {
+                    double modifier = 1 - (800 - TelemetryData.telescope_current) / 200.;
+                    this.lift.moveManual(-modifier);
+                }
+            } else {
+                TelemetryData.liftStage = 2;
+                this.telescope.manualMove(0);
+                this.shoulder.moveManual(0);
+                this.lift.moveManual(0);
+            }
+        }else if (TelemetryData.liftStage == 2) {
+            this.telescope.setPosition(RC_Telescope.prepForLift);
+            this.shoulder.setPosition(1500);
+            //updateEverything();
+            //this.lift.moveManual(0);
+        }
+
+             */
+
+    }
+
+    public void lifting(double input){
+        if (input != 0) {
+            //we are trying to lift
+            input = input *.5;
+            double pitch = getPitch();
+
+            if (pitch > 1) {
+                //backend low
+            } else if (pitch < -1) {
+                //backend high
+            } else {
+
+            }
+        }
+
+
+        /*
+        if (Math.abs(input)>0 && pitch<-.01) {
+            double modifier = input + (pitch/-.07)*.5;
+            this.lift.move(-modifier);
+            if (TelemetryData.telescope_position < 350){
+                this.telescope.move(0,true);
+            }
+        } else if (Math.abs(input)>0 && pitch > .01) {
+            double modifier = input - (pitch/.07)*.5;
+            this.lift.moveManual(modifier);
+            if (TelemetryData.telescope_position < 350){
+                this.telescope.manualMove(0);
+            }
+        } else {
+            this.lift.moveManual(input);
+            if (TelemetryData.telescope_position < 350){
+                this.telescope.manualMove(0);
+            } else {
+                this.telescope.manualMove(-input);
+            }
+        }
+
+         */
+    }
+
+    public double getPitch(){
+        return this.navx.getRoll();
     }
 }
